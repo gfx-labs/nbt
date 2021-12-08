@@ -314,8 +314,8 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				val.Set(value)
 				return nil
 			}
-			if val.Kind() == reflect.SliceOf(byteType).Kind() {
-				val.Set(val.Slice(0, val.Len()))
+			if val.Kind() == reflect.SliceOf(int32Type).Kind() {
+				val.Set(value.Slice(0, value.Len()))
 				return nil
 			}
 			return InvalidTypeError{
@@ -355,8 +355,8 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				val.Set(value)
 				return nil
 			}
-			if val.Kind() == reflect.SliceOf(byteType).Kind() {
-				val.Set(val.Slice(0, val.Len()))
+			if val.Kind() == reflect.SliceOf(int64Type).Kind() {
+				val.Set(value.Slice(0, value.Len()))
 				return nil
 			}
 			return InvalidTypeError{
