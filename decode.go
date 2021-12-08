@@ -355,7 +355,7 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				val.Set(value)
 				return nil
 			}
-			if val.Kind() == reflect.SliceOf(int64Type).Kind() {
+			if val.Kind() == reflect.Slice {
 				val.Set(value.Slice(0, value.Len()))
 				return nil
 			}
