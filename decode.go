@@ -269,6 +269,10 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 			value.Index(int(i)).SetUint(uint64(data[i]))
 		}
 		if val.Kind() != reflect.Array {
+			if val.Kind() == reflect.Slice {
+				val.Set(value.Slice(0, value.Len()))
+				return nil
+			}
 			if val.Kind() == reflect.Interface && val.NumMethod() == 0 {
 				// Empty interface.
 				val.Set(value)
@@ -310,6 +314,10 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				val.Set(value)
 				return nil
 			}
+			if val.Kind() == reflect.SliceOf(byteType).Kind() {
+				val.Set(val.Slice(0, val.Len()))
+				return nil
+			}
 			return InvalidTypeError{
 				Off:       d.r.off,
 				FieldType: val.Type(),
@@ -317,6 +325,7 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				TagType:   tagType,
 			}
 		}
+
 		if val.Cap() != int(length) {
 			return InvalidArraySizeError{
 				Off:       d.r.off,
@@ -344,6 +353,10 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 			if val.Kind() == reflect.Interface && val.NumMethod() == 0 {
 				// Empty interface.
 				val.Set(value)
+				return nil
+			}
+			if val.Kind() == reflect.SliceOf(byteType).Kind() {
+				val.Set(val.Slice(0, val.Len()))
 				return nil
 			}
 			return InvalidTypeError{
@@ -377,7 +390,9 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 			return err
 		}
 		valType := val.Type()
-		if val.Kind() != reflect.Slice && val.Kind() != reflect.Interface {
+
+		if val.Kind() != reflect.Slice && val.Kind() != reflect.Array &&
+			val.Kind() != reflect.Interface {
 			return InvalidTypeError{
 				Off:       d.r.off,
 				FieldType: val.Type(),
@@ -385,15 +400,19 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				TagType:   tagType,
 			}
 		}
+		var v reflect.Value
 		if val.Kind() == reflect.Interface {
 			valType = reflect.SliceOf(valType)
 		}
-		v := reflect.MakeSlice(valType, int(length), int(length))
+		if valType.Kind() == reflect.Array {
+			length = int32(val.Len())
+			v = reflect.New(reflect.ArrayOf(int(length), valType.Elem())).Elem()
+		} else {
+			v = reflect.MakeSlice(valType, int(length), int(length))
+		}
 		if length != 0 {
 			for i := 0; i < int(length); i++ {
 				if err := d.unmarshalTag(v.Index(i), listType, ""); err != nil {
-					// An error occurred during the decoding of one of the elements of the TAG_List, meaning it
-					// either had an invalid type or the NBT was invalid.
 					if _, ok := err.(InvalidTypeError); ok {
 						return InvalidTypeError{
 							Off:       d.r.off,

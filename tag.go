@@ -58,8 +58,19 @@ func tagName(tag byte) string {
 // tagExists checks if a tag exists.
 func tagExists(tag byte) bool {
 	switch tag {
-	case tagEnd, tagByte, tagInt16, tagInt32, tagInt64, tagFloat32, tagFloat64, tagByteArray, tagString,
-		tagSlice, tagStruct, tagInt32Array, tagInt64Array:
+	case tagEnd,
+		tagByte,
+		tagInt16,
+		tagInt32,
+		tagInt64,
+		tagFloat32,
+		tagFloat64,
+		tagByteArray,
+		tagString,
+		tagSlice,
+		tagStruct,
+		tagInt32Array,
+		tagInt64Array:
 		return true
 	default:
 		return false
