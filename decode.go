@@ -308,16 +308,17 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 			}
 			value.Index(int(i)).SetInt(int64(v))
 		}
+		if val.Type() == reflect.SliceOf(int32Type) {
+			val.Set(value.Slice(0, value.Len()))
+			return nil
+		}
 		if val.Kind() != reflect.Array || val.Type().Elem().Kind() != reflect.Int32 {
 			if val.Kind() == reflect.Interface && val.NumMethod() == 0 {
 				// Empty interface.
 				val.Set(value)
 				return nil
 			}
-			if val.Kind() == reflect.SliceOf(int32Type).Kind() {
-				val.Set(value.Slice(0, value.Len()))
-				return nil
-			}
+
 			return InvalidTypeError{
 				Off:       d.r.off,
 				FieldType: val.Type(),
@@ -349,16 +350,17 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 			}
 			value.Index(int(i)).SetInt(v)
 		}
+		if val.Type() == reflect.SliceOf(int64Type) {
+			val.Set(value.Slice(0, value.Len()))
+			return nil
+		}
 		if val.Kind() != reflect.Array || val.Type().Elem().Kind() != reflect.Int64 {
 			if val.Kind() == reflect.Interface && val.NumMethod() == 0 {
 				// Empty interface.
 				val.Set(value)
 				return nil
 			}
-			if val.Kind() == reflect.Slice {
-				val.Set(value.Slice(0, value.Len()))
-				return nil
-			}
+
 			return InvalidTypeError{
 				Off:       d.r.off,
 				FieldType: val.Type(),
