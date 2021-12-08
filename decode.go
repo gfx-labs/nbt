@@ -13,7 +13,7 @@ import (
 // Decoder reads NBT objects from an NBT input stream.
 type Decoder struct {
 	// Encoding is the variant to use for decoding the NBT passed. By default, the variant is set to
-	// NetworkLittleEndian, which is the variant used for network NBT.
+	// BigEndian, which is the variant used for network NBT.
 	Encoding Encoding
 
 	r     *offsetReader
@@ -22,7 +22,7 @@ type Decoder struct {
 
 // NewDecoder returns a new Decoder for the input stream reader passed.
 func NewDecoder(r io.Reader) *Decoder {
-	return &Decoder{Encoding: NetworkLittleEndian, r: newOffsetReader(r)}
+	return &Decoder{Encoding: BigEndian, r: newOffsetReader(r)}
 }
 
 // NewDecoderWithEncoding returns a new Decoder for the input stream reader passed with a specific encoding.
@@ -45,7 +45,7 @@ func (d *Decoder) Decode(v interface{}) error {
 }
 
 // Unmarshal decodes a slice of NBT data into a pointer to a Go values passed. Marshal will use the
-// NetworkLittleEndian encoding by default. To use a specific encoding, use UnmarshalEncoding.
+// BigEndian encoding by default. To use a specific encoding, use UnmarshalEncoding.
 //
 // The Go value passed must be a pointer to a value. Anything else will return an error before decoding.
 // The following NBT tags are decoded in the Go value passed as such:
@@ -72,7 +72,7 @@ func (d *Decoder) Decode(v interface{}) error {
 // a field that some tag should be decoded in. Setting the struct tag to '-' means that field will never be
 // filled by the decoding of the data passed.
 func Unmarshal(data []byte, v interface{}) error {
-	return UnmarshalEncoding(data, v, NetworkLittleEndian)
+	return UnmarshalEncoding(data, v, BigEndian)
 }
 
 // UnmarshalEncoding decodes a slice of NBT data into a pointer to a Go values passed using the NBT encoding
@@ -126,7 +126,12 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				val.Set(reflect.ValueOf(value))
 				return nil
 			}
-			return InvalidTypeError{Off: d.r.off, FieldType: val.Type(), Field: tagName, TagType: tagType}
+			return InvalidTypeError{
+				Off:       d.r.off,
+				FieldType: val.Type(),
+				Field:     tagName,
+				TagType:   tagType,
+			}
 		}
 		val.SetUint(uint64(value))
 
@@ -141,7 +146,12 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				val.Set(reflect.ValueOf(value))
 				return nil
 			}
-			return InvalidTypeError{Off: d.r.off, FieldType: val.Type(), Field: tagName, TagType: tagType}
+			return InvalidTypeError{
+				Off:       d.r.off,
+				FieldType: val.Type(),
+				Field:     tagName,
+				TagType:   tagType,
+			}
 		}
 		val.SetInt(int64(value))
 
@@ -156,7 +166,12 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				val.Set(reflect.ValueOf(value))
 				return nil
 			}
-			return InvalidTypeError{Off: d.r.off, FieldType: val.Type(), Field: tagName, TagType: tagType}
+			return InvalidTypeError{
+				Off:       d.r.off,
+				FieldType: val.Type(),
+				Field:     tagName,
+				TagType:   tagType,
+			}
 		}
 		val.SetInt(int64(value))
 
@@ -171,7 +186,12 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				val.Set(reflect.ValueOf(value))
 				return nil
 			}
-			return InvalidTypeError{Off: d.r.off, FieldType: val.Type(), Field: tagName, TagType: tagType}
+			return InvalidTypeError{
+				Off:       d.r.off,
+				FieldType: val.Type(),
+				Field:     tagName,
+				TagType:   tagType,
+			}
 		}
 		val.SetInt(value)
 
@@ -186,7 +206,12 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				val.Set(reflect.ValueOf(value))
 				return nil
 			}
-			return InvalidTypeError{Off: d.r.off, FieldType: val.Type(), Field: tagName, TagType: tagType}
+			return InvalidTypeError{
+				Off:       d.r.off,
+				FieldType: val.Type(),
+				Field:     tagName,
+				TagType:   tagType,
+			}
 		}
 		val.SetFloat(float64(value))
 
@@ -201,7 +226,12 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				val.Set(reflect.ValueOf(value))
 				return nil
 			}
-			return InvalidTypeError{Off: d.r.off, FieldType: val.Type(), Field: tagName, TagType: tagType}
+			return InvalidTypeError{
+				Off:       d.r.off,
+				FieldType: val.Type(),
+				Field:     tagName,
+				TagType:   tagType,
+			}
 		}
 		val.SetFloat(value)
 
@@ -216,7 +246,12 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				val.Set(reflect.ValueOf(value))
 				return nil
 			}
-			return InvalidTypeError{Off: d.r.off, FieldType: val.Type(), Field: tagName, TagType: tagType}
+			return InvalidTypeError{
+				Off:       d.r.off,
+				FieldType: val.Type(),
+				Field:     tagName,
+				TagType:   tagType,
+			}
 		}
 		val.SetString(value)
 
@@ -239,10 +274,20 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				val.Set(value)
 				return nil
 			}
-			return InvalidTypeError{Off: d.r.off, FieldType: val.Type(), Field: tagName, TagType: tagType}
+			return InvalidTypeError{
+				Off:       d.r.off,
+				FieldType: val.Type(),
+				Field:     tagName,
+				TagType:   tagType,
+			}
 		}
 		if val.Cap() != int(length) {
-			return InvalidArraySizeError{Off: d.r.off, Op: "ByteArray", GoLength: val.Cap(), NBTLength: int(length)}
+			return InvalidArraySizeError{
+				Off:       d.r.off,
+				Op:        "ByteArray",
+				GoLength:  val.Cap(),
+				NBTLength: int(length),
+			}
 		}
 		val.Set(value)
 
@@ -265,10 +310,20 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				val.Set(value)
 				return nil
 			}
-			return InvalidTypeError{Off: d.r.off, FieldType: val.Type(), Field: tagName, TagType: tagType}
+			return InvalidTypeError{
+				Off:       d.r.off,
+				FieldType: val.Type(),
+				Field:     tagName,
+				TagType:   tagType,
+			}
 		}
 		if val.Cap() != int(length) {
-			return InvalidArraySizeError{Off: d.r.off, Op: "Int32Array", GoLength: val.Cap(), NBTLength: int(length)}
+			return InvalidArraySizeError{
+				Off:       d.r.off,
+				Op:        "Int32Array",
+				GoLength:  val.Cap(),
+				NBTLength: int(length),
+			}
 		}
 		val.Set(value)
 
@@ -291,10 +346,20 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				val.Set(value)
 				return nil
 			}
-			return InvalidTypeError{Off: d.r.off, FieldType: val.Type(), Field: tagName, TagType: tagType}
+			return InvalidTypeError{
+				Off:       d.r.off,
+				FieldType: val.Type(),
+				Field:     tagName,
+				TagType:   tagType,
+			}
 		}
 		if val.Cap() != int(length) {
-			return InvalidArraySizeError{Off: d.r.off, Op: "Int64Array", GoLength: val.Cap(), NBTLength: int(length)}
+			return InvalidArraySizeError{
+				Off:       d.r.off,
+				Op:        "Int64Array",
+				GoLength:  val.Cap(),
+				NBTLength: int(length),
+			}
 		}
 		val.Set(value)
 
@@ -313,7 +378,12 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 		}
 		valType := val.Type()
 		if val.Kind() != reflect.Slice && val.Kind() != reflect.Interface {
-			return InvalidTypeError{Off: d.r.off, FieldType: val.Type(), Field: tagName, TagType: tagType}
+			return InvalidTypeError{
+				Off:       d.r.off,
+				FieldType: val.Type(),
+				Field:     tagName,
+				TagType:   tagType,
+			}
 		}
 		if val.Kind() == reflect.Interface {
 			valType = reflect.SliceOf(valType)
@@ -325,7 +395,12 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 					// An error occurred during the decoding of one of the elements of the TAG_List, meaning it
 					// either had an invalid type or the NBT was invalid.
 					if _, ok := err.(InvalidTypeError); ok {
-						return InvalidTypeError{Off: d.r.off, FieldType: valType.Elem(), Field: fmt.Sprintf("%v[%v]", tagName, i), TagType: listType}
+						return InvalidTypeError{
+							Off:       d.r.off,
+							FieldType: valType.Elem(),
+							Field:     fmt.Sprintf("%v[%v]", tagName, i),
+							TagType:   listType,
+						}
 					}
 					return err
 				}
@@ -338,7 +413,12 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 		d.depth++
 		switch val.Kind() {
 		default:
-			return InvalidTypeError{Off: d.r.off, FieldType: val.Type(), Field: tagName, TagType: tagType}
+			return InvalidTypeError{
+				Off:       d.r.off,
+				FieldType: val.Type(),
+				Field:     tagName,
+				TagType:   tagType,
+			}
 		case reflect.Struct:
 			// We first fetch a fields map from the sync.Pool. These maps already have a base size obtained
 			// from when they were used, meaning we don't have to re-allocate each element.
@@ -365,7 +445,11 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 				}
 				// We return an error if the struct does not have one of the fields found in the compound. It
 				// is rather important no data is lost during the decoding.
-				return UnexpectedNamedTagError{Off: d.r.off, TagName: tagName + "." + nestedTagName, TagType: nestedTagType}
+				return UnexpectedNamedTagError{
+					Off:     d.r.off,
+					TagName: tagName + "." + nestedTagName,
+					TagType: nestedTagType,
+				}
 			}
 			// Finally we delete all fields in the map and return it to the sync.Pool so that it may be
 			// re-used by the next operation.
@@ -375,7 +459,12 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 			fieldMapPool.Put(fields)
 		case reflect.Interface, reflect.Map:
 			if vk := val.Kind(); vk == reflect.Interface && val.NumMethod() != 0 {
-				return InvalidTypeError{Off: d.r.off, FieldType: val.Type(), Field: tagName, TagType: tagType}
+				return InvalidTypeError{
+					Off:       d.r.off,
+					FieldType: val.Type(),
+					Field:     tagName,
+					TagType:   tagType,
+				}
 			}
 			valType := val.Type()
 			if val.Kind() == reflect.Map {

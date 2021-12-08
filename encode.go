@@ -12,7 +12,7 @@ import (
 // Encoder writes NBT objects to an NBT output stream.
 type Encoder struct {
 	// Encoding is the variant to use for encoding the objects passed. By default, the variant is set to
-	// NetworkLittleEndian, which is the variant used for network NBT.
+	// BigEndian, which is the variant used for NBT
 	Encoding Encoding
 
 	w     *offsetWriter
@@ -30,7 +30,7 @@ func NewEncoder(w io.Writer) *Encoder {
 			return err
 		}}
 	}
-	return &Encoder{w: writer, Encoding: NetworkLittleEndian}
+	return &Encoder{w: writer, Encoding: BigEndian}
 }
 
 // NewEncoderWithEncoding returns a new encoder for the output stream writer passed using a specific encoding.
@@ -49,7 +49,7 @@ func (e *Encoder) Encode(v interface{}) error {
 }
 
 // Marshal encodes an object to its NBT representation and returns it as a byte slice. It uses the
-// NetworkLittleEndian NBT encoding. To use a specific encoding, use MarshalEncoding.
+// BigEndian NBT encoding. To use a specific encoding, use MarshalEncoding.
 //
 // The Go value passed must be one of the values below, and structs, maps and slices may only have types that
 // are found in the list below.
@@ -75,14 +75,16 @@ func (e *Encoder) Encode(v interface{}) error {
 // filled by the decoding of the data passed. Suffixing the 'nbt' struct tag with ',omitempty' will prevent
 // the field from being encoded if it is equal to its default value.
 func Marshal(v interface{}) ([]byte, error) {
-	return MarshalEncoding(v, NetworkLittleEndian)
+	return MarshalEncoding(v, BigEndian)
 }
 
 // MarshalEncoding encodes an object to its NBT representation and returns it as a byte slice. Its
 // functionality is identical to that of Marshal, except it accepts any NBT encoding.
 func MarshalEncoding(v interface{}, encoding Encoding) ([]byte, error) {
 	b := bufferPool.Get().(*bytes.Buffer)
-	err := (&Encoder{w: &offsetWriter{Writer: b, WriteByte: b.WriteByte}, Encoding: encoding}).Encode(v)
+	err := (&Encoder{w: &offsetWriter{Writer: b, WriteByte: b.WriteByte}, Encoding: encoding}).Encode(
+		v,
+	)
 	data := append([]byte(nil), b.Bytes()...)
 
 	// Make sure to reset the buffer before putting it back in the pool.
@@ -274,7 +276,10 @@ func (e *Encoder) writeStructValues(val reflect.Value) error {
 		tagName := fieldType.Name
 		if strings.HasSuffix(tag, ",omitempty") {
 			tag = strings.TrimSuffix(tag, ",omitempty")
-			if reflect.DeepEqual(fieldValue.Interface(), reflect.Zero(fieldValue.Type()).Interface()) {
+			if reflect.DeepEqual(
+				fieldValue.Interface(),
+				reflect.Zero(fieldValue.Type()).Interface(),
+			) {
 				// The tag had the ',omitempty' tag, meaning it should be omitted if it has the zero
 				// value. If this is reached, that was the case, and we skip it.
 				continue
