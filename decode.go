@@ -413,12 +413,13 @@ func (d *Decoder) unmarshalTag(val reflect.Value, tagType byte, tagName string) 
 		if length != 0 {
 			for i := 0; i < int(length); i++ {
 				if err := d.unmarshalTag(v.Index(i), listType, ""); err != nil {
-					if _, ok := err.(InvalidTypeError); ok {
+					if cast, ok := err.(InvalidTypeError); ok {
 						return InvalidTypeError{
 							Off:       d.r.off,
 							FieldType: valType.Elem(),
 							Field:     fmt.Sprintf("%v[%v]", tagName, i),
 							TagType:   listType,
+							Child:     &cast,
 						}
 					}
 					return err
