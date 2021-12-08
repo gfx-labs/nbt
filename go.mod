@@ -1,3 +1,3 @@
-module github.com/gfx-labs/nbt
+module nbt
 
 go 1.17
